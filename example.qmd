@@ -1,0 +1,9 @@
+
+```{r}
+remove.packages("rpxlog")
+install.packages("../rpxlog/", repos = NULL, type = "source")
+```
+
+```{r}
+rpxlog::polars_to_robj()
+```

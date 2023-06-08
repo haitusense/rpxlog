@@ -1,0 +1,15 @@
+[package]
+name = 'rpxlog_core'
+version = '0.0.1'
+edition = '2021'
+
+[lib]
+crate-type = [ "rlib" ]
+
+[dependencies]
+anyhow = "*"
+colored = "*"
+polars = "0.27.2"
+serde = "*"
+serde_yaml = "*"
+

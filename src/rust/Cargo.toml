@@ -1,0 +1,17 @@
+[package]
+name = 'rpxlog'
+version = '0.0.1'
+edition = '2021'
+
+[lib]
+crate-type = ['staticlib']
+name = 'rpxlog'
+
+[dependencies]
+extendr-api = '*'
+anyhow = "*"
+
+colored = "*"
+polars = "0.27.2"
+
+rpxlog_core = { path = "../rpxlog_core/"}
