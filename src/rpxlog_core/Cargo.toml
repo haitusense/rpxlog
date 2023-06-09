@@ -8,8 +8,19 @@ crate-type = [ "rlib" ]
 
 [dependencies]
 anyhow = "*"
+thiserror = "*"
 colored = "*"
+
+# -------- io --------
+walkdir = "2.3.2"
+
+# -------- string --------
+regex = "1.7.1"
+glob = "0.3.1"
+
+# -------- dataframe --------
 polars = "0.27.2"
 serde = "*"
 serde_yaml = "*"
+rust-stdf = "0.3.1"
 

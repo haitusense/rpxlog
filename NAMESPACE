@@ -11,4 +11,6 @@
 
 
 export(polars_to_robj)
+export(rpxlog_ptr_to_df)
+export(rpxlog_ptr_to_dfs)
 useDynLib(rpxlog, .registration = TRUE)

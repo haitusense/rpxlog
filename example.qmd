@@ -4,6 +4,23 @@ remove.packages("rpxlog")
 install.packages("../rpxlog/", repos = NULL, type = "source")
 ```
 
+
+```{r}
+remove.packages("rpxlog")
+remotes::install_github("haitusense/rpxlog", force=T)
+```
+
 ```{r}
 rpxlog::polars_to_robj()
+
+head(rpxlog::rpxlog_ptr_to_df("./sample/1.stdf", "OS_VCC.VDD12L"))
+head(rpxlog::rpxlog_ptr_to_df("./sample/1.txt", "OS_VCC.VDD12L"))
+head(rpxlog::rpxlog_ptr_to_df("./sample/1.hoge", "OS_VCC.VDD12L"))
+```
+
+```{r}
+paths <- c("./sample/1.stdf", "./sample/1.txt")
+df <- paths |> rpxlog::rpxlog_ptr_to_dfs("OS_VCC.VDD12L")
+head(as.data.frame(df[,1]))
+head(as.data.frame(df[,2]))
 ```
