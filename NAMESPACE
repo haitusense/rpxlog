@@ -9,8 +9,7 @@
 # S3method("",RpxLog)
 # export(RpxLog)
 
-
-export(polars_to_robj)
-export(rpxlog_ptr_to_df)
-export(rpxlog_ptr_to_dfs)
+export(rpxlog_sumally)
+export(rpxlog_header)
+export(rpxlog_ptr)
 useDynLib(rpxlog, .registration = TRUE)

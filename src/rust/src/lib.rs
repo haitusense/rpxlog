@@ -10,23 +10,54 @@ pub enum RobjError {
 	CannotConvert(),
 }
 
-#[extendr]
-pub fn polars_to_robj() -> Robj {
-  let df = rpxlog_core::polars_to_robj();
-  
-  let columns = df.get_columns();
 
-  let a: Vec<i32> = columns[0].i32().unwrap().into_no_null_iter().collect();
-  let b: Vec<i32> = columns[1].i32().unwrap().into_no_null_iter().collect();
-  let c: Vec<f64> = columns[2].f64().unwrap().into_no_null_iter().collect();
+#[extendr]
+pub fn rpxlog_sumally(path:&str) -> Robj {
+  match ffi::ffi_result(||{
+    let df = rpxlog_core::sumally(path)?;
   
-  data_frame!(x=a, y=b, value=c) 
+    let columns = df.get_columns();
+    let key: Vec<&str> = columns[0].utf8().context(RobjError::CannotConvert())?.into_no_null_iter().collect();
+    let count: Vec<u32> = columns[1].u32().context(RobjError::CannotConvert())?.into_no_null_iter().collect();
+    let dst = data_frame!(
+      key = key,
+      count = count
+    );
+    Ok(dst)
+  }){
+    Ok(n) => n,
+    Err(e) => {
+      println!("{}", format!("{e:?}").red());
+      Robj::from(())
+    }
+  }
 }
 
+
 #[extendr]
-pub fn rpxlog_ptr_to_df(path:&str, key:&str) -> Robj {
+pub fn rpxlog_header(path:&str) -> Robj {
   match ffi::ffi_result(||{
-    let df = rpxlog_core::ptr_to_df(path, key)?;
+    let val = rpxlog_core::header(path)?;
+    let src = serde_yaml::to_string(&val)?;
+    let dst = match R!("yaml::yaml.load({{ src }})") {
+      Ok(n) => n,
+      Err(e) => anyhow::bail!(format!("{:?}",e))
+    };
+    Ok(dst)
+  }){
+    Ok(n) => n,
+    Err(e) => {
+      println!("{}", format!("{e:?}").red());
+      Robj::from(())
+    }
+  }
+}
+
+
+#[extendr]
+pub fn rpxlog_ptr(path:&str, key:&str) -> Robj {
+  match ffi::ffi_result(||{
+    let df = rpxlog_core::ptr(path, key)?;
   
     let columns = df.get_columns();
     let cnt: Vec<i32> = columns[0].i32().context(RobjError::CannotConvert())?.into_no_null_iter().collect();
@@ -55,6 +86,7 @@ pub fn rpxlog_ptr_to_df(path:&str, key:&str) -> Robj {
 
 extendr_module! {
   mod rpxlog;
-  fn polars_to_robj;
-  fn rpxlog_ptr_to_df;
+  fn rpxlog_sumally;
+  fn rpxlog_header;
+  fn rpxlog_ptr;
 }

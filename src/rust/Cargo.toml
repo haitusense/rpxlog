@@ -15,5 +15,7 @@ once_cell = "*"
 
 colored = "*"
 polars = "0.27.2"
+serde = "*"
+serde_yaml = "*"
 
 rpxlog_core = { path = "../rpxlog_core/"}
