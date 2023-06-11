@@ -26,12 +26,21 @@ rpxlog::rpxlog_sumally("./sample/1.stdf")
 rpxlog::rpxlog_header("./sample/1.stdf")
 ```
 
+## DTR (Datalog Text Record) 
+
+```{r}
+glob2rx("PixelTest_Time:*")
+a <- rpxlog::rpxlog_dtr("./sample/1.stdf", glob2rx("PixelTest_Time:*"))
+as.data.frame(a[,1])
+```
+
 ## PTR (Parametric Test Record) 
 
 ```{r}
-head(rpxlog::rpxlog_ptr("./sample/1.stdf", "OS_VCC.VDD12L"))
-head(rpxlog::rpxlog_ptr("./sample/1.txt", "OS_VCC.VDD12L"))
-head(rpxlog::rpxlog_ptr("./sample/1.hoge", "OS_VCC.VDD12L"))
+a <- rpxlog::rpxlog_ptr("./sample/1.stdf", "OS_VCC.VDD12L")
+head(as.data.frame(a[,1]))
+# head(rpxlog::rpxlog_ptr("./sample/1.txt", "OS_VCC.VDD12L"))
+# head(rpxlog::rpxlog_ptr("./sample/1.hoge", "OS_VCC.VDD12L"))
 ```
 
 ```{r}

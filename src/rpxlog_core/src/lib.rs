@@ -42,6 +42,16 @@ pub fn ptr(path:&str, key:&str) -> anyhow::Result<DataFrame> {
   }
 }
 
+pub fn dtr(path:&str, key:&str) -> anyhow::Result<DataFrame> {
+  let text_pathbuf = std::path::PathBuf::from(path);
+  let ext_string = text_pathbuf.extension().context(SystemError::NotImplemented())?.to_string_lossy().into_owned();
+  match ext_string.as_str() {
+    "stdf" => stdf::stdf_dtr(path, key),
+    // "txt" => txt::txt_ptr_to_robj(path, key),
+    _=> anyhow::bail!(SystemError::NotImplemented())
+  }
+}
+
 
 #[cfg(test)]
 mod tests {

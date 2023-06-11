@@ -10,4 +10,5 @@ NULL
 
 rpxlog_sumally <- function(path) .Call(wrap__rpxlog_sumally, path)
 rpxlog_header <- function(path) .Call(wrap__rpxlog_header, path)
+rpxlog_dtr <- base::Vectorize(function(path, key) .Call(wrap__rpxlog_dtr, path, key), USE.NAMES = F)
 rpxlog_ptr <- base::Vectorize(function(path, key) .Call(wrap__rpxlog_ptr, path, key), USE.NAMES = F)

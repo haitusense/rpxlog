@@ -2,6 +2,7 @@ use anyhow::{Context as _, bail};
 use polars::prelude::*;
 use rust_stdf::{stdf_file::*, stdf_record_type::*, StdfRecord};
 use serde_yaml::Value;
+use regex::Regex;
 
 /* https://docs.rs/rust-stdf/latest/rust_stdf/ */
 
@@ -264,10 +265,7 @@ pub fn stdf_ptr(path:&str, key:&str) -> anyhow::Result<DataFrame> {
     match rec {
       StdfRecord::MIR(n) => { println!("{:?}", n); },
       StdfRecord::SDR(n) => { println!("{:?}", n); },
-      StdfRecord::PIR(n) => {
-        cnt += 1;
-        // println!("{:?}", n);
-      },
+      StdfRecord::PIR(n) => { cnt += 1; },
       StdfRecord::PRR(n) => { 
         vec_cnt2.push(cnt);
         vec_num_test.push(n.num_test as i32);
@@ -282,9 +280,6 @@ pub fn stdf_ptr(path:&str, key:&str) -> anyhow::Result<DataFrame> {
           vec_unit.push(n.units.unwrap_or("".to_string()));
           vec_real.push(n.result as f64 * 10f64.powf(n.res_scal.unwrap_or(0i8) as f64));
         }
-      },
-      StdfRecord::DTR(n) => { 
-        println!("{:?}",n)
       },
       _=> { }
     };
@@ -301,6 +296,56 @@ pub fn stdf_ptr(path:&str, key:&str) -> anyhow::Result<DataFrame> {
     "num_test" =>  vec_num_test,
     "x" =>  vec_x,
     "y" => vec_y,
+  )?;
+  let joined_df = df1.left_join(&df2, ["cnt"], ["cnt"])?;
+
+  Ok(joined_df)
+}
+
+
+pub fn stdf_dtr(path:&str, re:&str) -> anyhow::Result<DataFrame> {
+  let mut cnt = -1;
+  let re = Regex::new(re)?;
+
+  let mut vec_cnt = Vec::<i32>::new();
+  let mut vec_result = Vec::<String>::new();
+
+  let mut prr_cnt = Vec::<i32>::new();
+  let mut prr_num_test = Vec::<i32>::new();
+  let mut prr_x = Vec::<i32>::new();
+  let mut prr_y = Vec::<i32>::new();
+
+  stdf!(path, |rec| {
+    match rec {
+      StdfRecord::MIR(n) => { println!("{:?}", n); },
+      StdfRecord::SDR(n) => { println!("{:?}", n); },
+      StdfRecord::PIR(n) => { cnt += 1; },
+      StdfRecord::DTR(n) => { 
+        if re.is_match(n.text_dat.as_str()) {
+          vec_cnt.push(cnt);
+          println!("{:?}", n.text_dat);
+          vec_result.push(n.text_dat);
+
+        }
+      },
+      StdfRecord::PRR(n) => { 
+        prr_cnt.push(cnt);
+        prr_num_test.push(n.num_test as i32);
+        prr_x.push(n.x_coord as i32);
+        prr_y.push(n.y_coord as i32);
+      },
+      _=> { }
+    };
+  });
+  let df1 = df!(
+    "cnt" => vec_cnt,
+    "result" => vec_result,
+  )?;
+  let df2 = df!(
+    "cnt" => prr_cnt,
+    "num_test" =>  prr_num_test,
+    "x" =>  prr_x,
+    "y" => prr_y,
   )?;
   let joined_df = df1.left_join(&df2, ["cnt"], ["cnt"])?;
 
@@ -368,9 +413,19 @@ mod tests {
     println!("{:#?}", header);
     println!("{}", s);
 
-    let df = stdf_ptr(stdf_path, "Vref_VBias3_1.VBias3_pat")?;
     // let df = stdf_ptr(stdf_path, "OS_VCC.VDD12L")?;
+    let df = stdf_ptr(stdf_path, "Vref_VBias3_1.VBias3_pat")?;
     println!("{}", df);
+
+    let re = indoc::indoc!{ r"
+      \s*[0-9]+ *[0-9]+ *[A-Z]+ *([^\s]+) +([^\s]+) +([\-.0-9]+ *[a-zA-Z]*?) *[\-.0-9]+[ a-zA-Z]+
+    "}.replace("\n", "");
+    let re = indoc::indoc!{ r"
+      \s*[0-9]+ *[0-9]+ *[A-Z]+ *([^\s]+) +([^\s]+)
+    "}.replace("\n", "");
+    let df = stdf_dtr(stdf_path, re.as_str())?;
+    println!("{}", df);
+
     
     Ok(())
   }

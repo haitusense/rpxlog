@@ -11,5 +11,6 @@
 
 export(rpxlog_sumally)
 export(rpxlog_header)
+export(rpxlog_dtr)
 export(rpxlog_ptr)
 useDynLib(rpxlog, .registration = TRUE)
