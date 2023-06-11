@@ -192,7 +192,7 @@ pub fn stdf_header(path:&str) -> anyhow::Result<serde_yaml::Value> {
     Ok(n) => n,
     Err(e) => bail!(format!("{}",e))
   };
-  let rec_types = REC_MIR | REC_SDR | REC_WCR;
+  let rec_types = REC_MIR | REC_SDR | REC_WCR | REC_WIR;
   let recs : Vec<StdfRecord> = reader.get_record_iter().map(|x| x.unwrap()).filter(|x| x.is_type(rec_types)).collect();
   
   // let mut keys = Vec::<String>::new();
@@ -237,7 +237,8 @@ pub fn stdf_header(path:&str) -> anyhow::Result<serde_yaml::Value> {
     match i {
       StdfRecord::MIR(n) => { add_val(&mut value, format!("{n:#?}"))?; },
       StdfRecord::SDR(n) => { add_val(&mut value, format!("{n:#?}"))?; },
-      StdfRecord::WCR(n) => { add_val(&mut value, format!("{n:#?}"))?; },  
+      StdfRecord::WCR(n) => { add_val(&mut value, format!("{n:#?}"))?; }, 
+      StdfRecord::WIR(n) => { add_val(&mut value, format!("{n:#?}"))?; },  
       _=> {}
     }
   }
@@ -261,15 +262,11 @@ pub fn stdf_ptr(path:&str, key:&str) -> anyhow::Result<DataFrame> {
 
   stdf!(path, |rec| {
     match rec {
-      StdfRecord::MIR(n) => { 
-        println!("{:?}", n);
-      },
-      StdfRecord::SDR(n) => { 
-        println!("{:?}", n);
-      },
+      StdfRecord::MIR(n) => { println!("{:?}", n); },
+      StdfRecord::SDR(n) => { println!("{:?}", n); },
       StdfRecord::PIR(n) => {
         cnt += 1;
-        println!("{:?}", n);
+        // println!("{:?}", n);
       },
       StdfRecord::PRR(n) => { 
         vec_cnt2.push(cnt);
@@ -286,10 +283,13 @@ pub fn stdf_ptr(path:&str, key:&str) -> anyhow::Result<DataFrame> {
           vec_real.push(n.result as f64 * 10f64.powf(n.res_scal.unwrap_or(0i8) as f64));
         }
       },
+      StdfRecord::DTR(n) => { 
+        println!("{:?}",n)
+      },
       _=> { }
     };
   });
-  let df = df!(
+  let df1 = df!(
     "cnt" => vec_cnt,
     "key" =>  vec_key,
     "result" =>  vec_result,
@@ -302,8 +302,9 @@ pub fn stdf_ptr(path:&str, key:&str) -> anyhow::Result<DataFrame> {
     "x" =>  vec_x,
     "y" => vec_y,
   )?;
-  println!("{:?}", df2);
-  Ok(df)
+  let joined_df = df1.left_join(&df2, ["cnt"], ["cnt"])?;
+
+  Ok(joined_df)
 }
 
 
@@ -367,9 +368,9 @@ mod tests {
     println!("{:#?}", header);
     println!("{}", s);
 
-    let df = stdf_ptr(stdf_path, "OS_VCC.VDD12L")?;
-
-
+    let df = stdf_ptr(stdf_path, "Vref_VBias3_1.VBias3_pat")?;
+    // let df = stdf_ptr(stdf_path, "OS_VCC.VDD12L")?;
+    println!("{}", df);
     
     Ok(())
   }

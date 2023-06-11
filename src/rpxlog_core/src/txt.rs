@@ -28,6 +28,8 @@ static RE_TEST: &str = r"
 \s*[0-9]+ *[0-9]+ *[A-Z]+ *([^\s]+) +([^\s]+) +([\-.0-9]+ *[a-zA-Z]*?) *[\-.0-9]+[ a-zA-Z]+
 ";
 
+
+
 // Rはバックスラッシュではなく、スラッシュ
 pub fn search_dirs(path:&str, re_str:&str) -> anyhow::Result<Vec<String>> {
   let re = Regex::new(re_str).context("regex err")?;
