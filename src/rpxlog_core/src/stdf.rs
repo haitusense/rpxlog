@@ -4,6 +4,8 @@ use rust_stdf::{stdf_file::*, stdf_record_type::*, StdfRecord};
 use serde_yaml::Value;
 use regex::Regex;
 
+use std::io::Write;
+
 /* https://docs.rs/rust-stdf/latest/rust_stdf/ */
 
 /* STDF Specification
@@ -173,6 +175,16 @@ impl PrintAll for DataFrame {
 }
 
 
+pub fn stdf_to_txt(in_path:&str, out_path:&str) -> anyhow::Result<()> {
+  let mut file = std::fs::File::create(out_path)?;
+  let mut cnt = 0;
+  stdf!(in_path, |rec| {
+    writeln!(file,"{} {:#?}", cnt, rec).context("context").unwrap();
+    cnt +=1;
+  });
+  Ok(())
+}
+
 pub fn stdf_sumally(path:&str) -> anyhow::Result<DataFrame> {
   let mut reader = match StdfReader::new(path){
     Ok(n) => n,
@@ -183,9 +195,10 @@ pub fn stdf_sumally(path:&str) -> anyhow::Result<DataFrame> {
     .map(|x| x.unwrap())
     .map(|x| x.to_string() ).collect();
   let df = df!( "value" => vec ).context("aa")?;
-  let dst: DataFrame = df.groupby(["value"])?.select(["value"]).count()?;
-
-  Ok(dst)
+  let df = df.groupby(["value"])?.select(["value"]).count()?;
+  let casted_column = df.column("value_count")?.cast(&DataType::Int32)?;
+  let df = df.drop("value_count")?.with_column(casted_column)?.clone();
+  Ok(df)
 }
 
 pub fn stdf_header(path:&str) -> anyhow::Result<serde_yaml::Value> {
@@ -302,7 +315,6 @@ pub fn stdf_ptr(path:&str, key:&str) -> anyhow::Result<DataFrame> {
   Ok(joined_df)
 }
 
-
 pub fn stdf_dtr(path:&str, re:&str) -> anyhow::Result<DataFrame> {
   let mut cnt = -1;
   let re = Regex::new(re)?;
@@ -319,11 +331,11 @@ pub fn stdf_dtr(path:&str, re:&str) -> anyhow::Result<DataFrame> {
     match rec {
       StdfRecord::MIR(n) => { println!("{:?}", n); },
       StdfRecord::SDR(n) => { println!("{:?}", n); },
-      StdfRecord::PIR(n) => { cnt += 1; },
+      StdfRecord::PIR(_) => { cnt += 1; },
       StdfRecord::DTR(n) => { 
         if re.is_match(n.text_dat.as_str()) {
           vec_cnt.push(cnt);
-          println!("{:?}", n.text_dat);
+          // println!("{:?}", n.text_dat);
           vec_result.push(n.text_dat);
 
         }
@@ -344,7 +356,7 @@ pub fn stdf_dtr(path:&str, re:&str) -> anyhow::Result<DataFrame> {
   let df2 = df!(
     "cnt" => prr_cnt,
     "num_test" =>  prr_num_test,
-    "x" =>  prr_x,
+    "x" => prr_x,
     "y" => prr_y,
   )?;
   let joined_df = df1.left_join(&df2, ["cnt"], ["cnt"])?;
@@ -354,9 +366,18 @@ pub fn stdf_dtr(path:&str, re:&str) -> anyhow::Result<DataFrame> {
 
 
 
+
+
+
 #[cfg(test)]
 mod tests {
   use super::*;
+  #[test]
+  fn it_works_yaml() -> anyhow::Result<()> {
+    let stdf_path = "../../sample/1.stdf";
+    let _ = stdf_yaml(stdf_path)?;
+    Ok(())
+  }
 
   #[test]
   fn it_works() -> anyhow::Result<()> {
@@ -417,9 +438,7 @@ mod tests {
     let df = stdf_ptr(stdf_path, "Vref_VBias3_1.VBias3_pat")?;
     println!("{}", df);
 
-    let re = indoc::indoc!{ r"
-      \s*[0-9]+ *[0-9]+ *[A-Z]+ *([^\s]+) +([^\s]+) +([\-.0-9]+ *[a-zA-Z]*?) *[\-.0-9]+[ a-zA-Z]+
-    "}.replace("\n", "");
+
     let re = indoc::indoc!{ r"
       \s*[0-9]+ *[0-9]+ *[A-Z]+ *([^\s]+) +([^\s]+)
     "}.replace("\n", "");

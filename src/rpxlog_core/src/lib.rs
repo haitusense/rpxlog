@@ -1,6 +1,6 @@
 mod txt;
 mod txt_new;
-mod stdf;
+pub mod stdf;
 pub mod unit;
 use anyhow::{Context as _};
 use thiserror::Error;
@@ -69,6 +69,32 @@ mod tests {
     let a : Vec<_> = columns[1].utf8().context("a")?.into_no_null_iter().collect();
 
     println!("{:?}",a);
+
+    Ok(())
+
+  }
+  
+  #[test]
+  fn it_works_2() -> anyhow::Result<()> {
+    let df = ptr("../../sample/1.stdf", "OS_VCC.VDD12L")?;
+    println!("{:?}",df);
+    
+    let columns = df.get_columns();
+    for i in columns {
+      match i.dtype() {
+        DataType::Utf8 => println!("Series is of type Utf8"),
+        DataType::Int32 => println!("Series is of type Int32"),
+        DataType::UInt32 => println!("Series is of type Int32"),
+        DataType::Float64 => println!("Series is of type Float64"),
+        _=> anyhow::bail!("no type")
+
+      }
+    }
+    let a : Vec<_> = columns[1].utf8().context("a")?.into_no_null_iter().collect();
+
+    println!("{:?}",a);
+
+    println!("{:?}",df.get_column_names());
 
     Ok(())
 

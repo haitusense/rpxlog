@@ -9,6 +9,7 @@
 # S3method("",RpxLog)
 # export(RpxLog)
 
+export(rpxlog_stdf_to_txt)
 export(rpxlog_sumally)
 export(rpxlog_header)
 export(rpxlog_dtr)

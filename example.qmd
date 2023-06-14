@@ -1,26 +1,31 @@
-## Install
+## 1. Install
 
-### local
+### 1.1. local
 
 ```{r}
 remove.packages("rpxlog")
 install.packages("../rpxlog/", repos = NULL, type = "source")
 ```
 
-### github
+### 1.2. github
 
 ```{r}
 remove.packages("rpxlog")
 remotes::install_github("haitusense/rpxlog", force=T)
 ```
 
-## Logの構造確認（各レコードのカウント）
+## 2. Logの構造確認（各レコードのカウント）
+
+
+```{r}
+rpxlog::rpxlog_stdf_to_txt("./sample/1.stdf", "out.txt")
+```
 
 ```{r}
 rpxlog::rpxlog_sumally("./sample/1.stdf")
 ```
 
-## Header
+## 3. Header
 
 ```{r}
 rpxlog::rpxlog_header("./sample/1.stdf")
@@ -29,7 +34,6 @@ rpxlog::rpxlog_header("./sample/1.stdf")
 ## DTR (Datalog Text Record) 
 
 ```{r}
-glob2rx("PixelTest_Time:*")
 a <- rpxlog::rpxlog_dtr("./sample/1.stdf", glob2rx("PixelTest_Time:*"))
 as.data.frame(a[,1])
 ```

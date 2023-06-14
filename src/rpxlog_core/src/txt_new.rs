@@ -21,20 +21,28 @@ static RE_HEADERS: Lazy<String> = Lazy::new(|| indoc!{ r"
   \n\n
 "}.replace("\n", ""));
 
+static RE_PIR: Lazy<String> = Lazy::new(|| indoc!{ r"
+  \s*TCNT# ([0-9]+) +SITE# ([0-9]+)
+  \s*NO Site  Result  TestName           Signal          Measure   LowLimit  HighLimit   Force
+"}.replace("\n", ""));
+
 static RE_PTR: Lazy<String> = Lazy::new(|| indoc!{ r"
   \s*[0-9]+ *[0-9]+ *[A-Z]+ *([^\s]+) +([^\s]+) +([\-.0-9]+ *[a-zA-Z]*?) *[\-.0-9]+[ a-zA-Z]+
 "}.replace("\n", ""));
 
-const RE_H: &str = concatdoc!{r#"
-def hello():
-    print("Hello, world!")
+static RE_PRR: Lazy<String> = Lazy::new(|| indoc!{ r"
+  \s*-------------------   ------------
+  \s*Site   Fail   Total    Cate   Bin    XCoord   YCoord         TestTime\(([.0-9]+)([a-zA-Z]+)\)
+  \s*-------------------   ------------
+  \s*([ 0-9]+)
+"}.replace("\n", ""));
 
-hello()
-"#};
 
 enum TxtRecordEnum {
   Header(String),
+  PIR(String),
   PTR(String),
+  PRR(String),
   None
 }
 
@@ -42,7 +50,9 @@ struct TxtRecord {
   header_flag: bool,
   txt: String,
   re_header : Regex,
+  re_pir : Regex,
   re_ptr : Regex,
+  re_prr : Regex,
 }
 
 impl TxtRecord {
@@ -52,7 +62,9 @@ impl TxtRecord {
       header_flag : false,
       txt : String::from(""),
       re_header : Regex::new(RE_HEADERS.replace("\n", "").as_str()).unwrap(),
+      re_pir : Regex::new(RE_PIR.replace("\n", "").as_str()).unwrap(),
       re_ptr : Regex::new(RE_PTR.replace("\n", "").as_str()).unwrap(),
+      re_prr : Regex::new(RE_PRR.replace("\n", "").as_str()).unwrap(),
     }
   }
 
@@ -62,13 +74,18 @@ impl TxtRecord {
 
   fn push(&mut self, src:&str) {
     self.txt.push_str(format!("{}\n", src).as_str());
+    // println!("{}", self.txt);
   }
 
   fn match_type(&self) -> TxtRecordEnum {
     if self.re_ptr.is_match(self.txt.as_str()) {
       TxtRecordEnum::PTR(self.txt.to_string())
+    } else if self.re_pir.is_match(self.txt.as_str()) {
+      TxtRecordEnum::PIR(self.txt.to_string())
+    } else if self.re_prr.is_match(self.txt.as_str()) {
+      TxtRecordEnum::PRR(self.txt.to_string())
     } else if self.re_header.is_match(self.txt.as_str()) {
-      TxtRecordEnum::PTR(self.txt.to_string())
+      TxtRecordEnum::Header(self.txt.to_string())
     } else {
       TxtRecordEnum::None
     }
@@ -89,8 +106,22 @@ pub fn txt_header(path:&str) -> anyhow::Result<()> {
     rec.push(i?.as_str());
     cnt += 1;
     match rec.match_type() {
-      TxtRecordEnum::Header(_) => println!("header : {}", cnt),
-      TxtRecordEnum::PTR(_) => {},
+      TxtRecordEnum::Header(n) => {
+        println!("header : \n{}", n);
+        rec.clear_after_header();
+      },
+      TxtRecordEnum::PIR(n) => {
+        println!("pir : \n{}", n);
+        rec.clear_after_header();
+      },
+      TxtRecordEnum::PTR(n) => {
+        println!("ptr : \n{}", n);
+        rec.clear_after_header();
+      },
+      TxtRecordEnum::PRR(n) => {
+        println!("prr : \n{}", n);
+        rec.clear_after_header();
+      },
       TxtRecordEnum::None => {},
     }
 
