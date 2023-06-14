@@ -3,6 +3,7 @@ use thiserror::Error;
 use once_cell::sync::Lazy;
 use std::sync::RwLock;
 use std::backtrace::Backtrace;
+use extendr_api::prelude::*;
 
 #[derive(Error, Debug)]
 pub enum FFIError {
@@ -54,4 +55,29 @@ pub fn ffi_result<F, T>(f: F) -> anyhow::Result<T> where F: FnOnce() -> anyhow::
 			// bail!("panicked in {} : {}", key, String::from("Unknown error occurred."))
 		},
 	}
+}
+
+
+pub trait RobjArgs {
+  fn to_real(&self, key: &str) -> anyhow::Result<f64>;
+  fn to_char(&self, key: &str) -> anyhow::Result<&str>;
+  fn to_bool(&self, key: &str) -> anyhow::Result<bool>;
+}
+
+impl RobjArgs for Robj {
+  fn to_real(&self, key: &str) -> anyhow::Result<f64> {
+    let names_and_values : Vec<(&str, Robj)> = self.as_list().context("failed args to list")?.iter().collect();
+    let dst = names_and_values.iter().find(|&s| s.0 == key).context("not found key in args")?;
+    Ok(dst.1.as_real().context("not found key in args")?)
+  }
+  fn to_char(&self, key: &str) -> anyhow::Result<&str> {
+    let names_and_values : Vec<(&str, Robj)> = self.as_list().context("failed args to list")?.iter().collect();
+    let dst = names_and_values.iter().find(|&s| s.0 == key).context("not found key in args")?;
+    Ok(dst.1.as_str().context("not found key in args")?)
+  }
+  fn to_bool(&self, key: &str) -> anyhow::Result<bool> {
+    let names_and_values : Vec<(&str, Robj)> = self.as_list().context("failed args to list")?.iter().collect();
+    let dst = names_and_values.iter().find(|&s| s.0 == key).context("not found key in args")?;
+    Ok(dst.1.as_bool().context("not found key in args")?)
+  }
 }

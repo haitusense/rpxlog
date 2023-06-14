@@ -6,6 +6,7 @@ use anyhow::{Context as _};
 use thiserror::Error;
 use polars::prelude::*;
 use serde_yaml::Value;
+use std::path::Path;
 
 #[derive(Error, Debug)]
 pub enum SystemError {
@@ -52,6 +53,19 @@ pub fn dtr(path:&str, key:&str) -> anyhow::Result<DataFrame> {
   }
 }
 
+
+pub fn path_split<'a>(path:&'a str, delimiter:&str) -> anyhow::Result<Vec<&'a str>> {
+  let path_buf = Path::new(path);
+  println!("path = {}", path );
+  println!(" stem = {:?}", path_buf.file_stem() );
+  println!(" extension = {:?}", path_buf.extension() );
+
+  println!("delimiter = {}", delimiter );
+  let a = path_buf.file_stem().unwrap().to_str().unwrap();
+  let v: Vec<&str> = a.split(delimiter).collect();
+  // println!(" {:?}", v );
+  Ok(v)
+}
 
 #[cfg(test)]
 mod tests {

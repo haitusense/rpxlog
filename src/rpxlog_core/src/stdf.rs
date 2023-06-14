@@ -188,12 +188,13 @@ pub fn stdf_to_txt(in_path:&str, out_path:&str) -> anyhow::Result<()> {
 pub fn stdf_sumally(path:&str) -> anyhow::Result<DataFrame> {
   let mut reader = match StdfReader::new(path){
     Ok(n) => n,
-    Err(e) => bail!(format!("{}",e))
+    Err(e) => bail!(format!("{}", e))
   };
 
   let vec : Vec<_> = reader.get_record_iter()
     .map(|x| x.unwrap())
     .map(|x| x.to_string() ).collect();
+
   let df = df!( "value" => vec ).context("aa")?;
   let df = df.groupby(["value"])?.select(["value"]).count()?;
   let casted_column = df.column("value_count")?.cast(&DataType::Int32)?;

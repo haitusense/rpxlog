@@ -4,6 +4,8 @@ use thiserror::Error;
 use colored::Colorize;
 use extendr_api::prelude::*;
 use polars::prelude::*;
+use ffi::RobjArgs;
+use std::path::Path;
 
 #[derive(Error, Debug)]
 pub enum RobjError {
@@ -83,10 +85,19 @@ pub fn rpxlog_stdf_to_txt(in_path:&str, out_path:&str) {
 
 
 #[extendr]
-pub fn rpxlog_sumally(path:&str) -> Robj {
+pub fn rpxlog_sumally(path:&str, args:Robj) -> Robj {
   match ffi::ffi_result(||{
+    println!("path = {}", path );
+    let del = args.to_char("delimiter").unwrap_or("_");
+    println!("delimiter = {}", del );
+    let path_vec = rpxlog_core::path_split(path, del)?;
+    println!(" -> {:?}", path_vec );
+    println!("option a = {}", args.to_real("a").unwrap_or(-1f64) );
+    println!("option b = {}", args.to_char("b").unwrap_or("na") );
+
     let df = rpxlog_core::sumally(path)?;
-    let dst = df_to_robj(df)?;
+    let df = df_to_robj(df)?;
+    let dst = R!("merge( t(data.frame(path = {{path_vec}} )) , {{df}})").unwrap();
   
     // let columns = df.get_columns();
     // let column_names = df.get_column_names();

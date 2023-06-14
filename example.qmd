@@ -22,7 +22,8 @@ rpxlog::rpxlog_stdf_to_txt("./sample/1.stdf", "out.txt")
 ```
 
 ```{r}
-rpxlog::rpxlog_sumally("./sample/1.stdf")
+rpxlog::rpxlog_sumally("./sample/a_b_c.stdf")
+rpxlog::rpxlog_sumally("./sample/a-b-c.stdf", delimiter = "-")
 ```
 
 ## 3. Header
@@ -60,4 +61,16 @@ keys <- c("OS_VCC.VDD12L", "OS_VCC.VDD18L")
 df <- paths |> rpxlog::rpxlog_ptr(keys)
 head(as.data.frame(df[,1]))
 head(as.data.frame(df[,2]))
+```
+
+
+
+```{r}
+a <- t(data.frame(path = c("a", "b", "c")))
+b <- c(1,2,3)
+c <- c(4,5,6)
+d <- data.frame(b, c)
+a
+d
+merge(a,d)
 ```
